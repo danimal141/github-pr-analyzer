@@ -1,0 +1,51 @@
+#!/bin/sh
+
+set -eu
+
+# ghコマンドがない場合はexit
+if ! gh help > /dev/null; then
+  echo "gh is required."
+  echo "Please see: https://github.com/cli/cli"
+  exit 1
+fi
+
+YEAR=""
+MONTH=""
+REPO=""
+
+# 引数の解析
+for i in "$@"; do
+  case $i in
+      --year=*)
+      YEAR="${i#*=}"
+      shift
+      ;;
+      --month=*)
+      MONTH="${i#*=}"
+      shift
+      ;;
+      --repo=*)
+      REPO="${i#*=}"
+      shift
+      ;;
+  esac
+done
+
+# 必須引数のチェック
+if [ -z "$YEAR" ] || [ -z "$MONTH" ] || [ -z "$REPO" ]; then
+    echo "Usage: $0 --year=YYYY --month=MM --repo=orgName/repoName"
+    exit 1
+fi
+
+# 月の末日を計算
+LAST_DAY=$(cal $MONTH $YEAR | awk 'NF {DAYS = $NF}; END {print DAYS}')
+
+# 期間を設定
+SINCE="$YEAR-$MONTH-01"
+UNTIL="$YEAR-$MONTH-$LAST_DAY"
+
+# GitHub CLIを使ってPRのリストを取得
+prs=$(gh pr list --repo "$REPO" --state all --search "created:>$SINCE created:<$UNTIL" --json number,title,author --limit 300)
+
+# jqを使ってauthor単位でgroup byし、カウント
+echo "$prs" | jq '[group_by(.author.login)[] | {author: .[0].author.login, count: length}]'
