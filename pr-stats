@@ -38,6 +38,6 @@ LAST_DAY=$(cal $MONTH $YEAR | awk 'NF {DAYS = $NF}; END {print DAYS}')
 SINCE="$YEAR-$MONTH-01"
 UNTIL="$YEAR-$MONTH-$LAST_DAY"
 
-prs=$(gh pr list --repo "$REPO" --state all --search "created:>$SINCE created:<$UNTIL" --json number,title,author --limit 300)
+prs=$(gh pr list --repo "$REPO" --state all --search "created:>$SINCE closed:<$UNTIL" --json number,title,author --limit 300)
 
 echo "$prs" | jq '[group_by(.author.login)[] | {author: .[0].author.login, count: length}]'
