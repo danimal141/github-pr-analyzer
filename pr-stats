@@ -11,6 +11,7 @@ fi
 YEAR=""
 MONTH=""
 REPO=""
+LIMIT=500
 
 for i in "$@"; do
   case $i in
@@ -38,6 +39,8 @@ LAST_DAY=$(cal $MONTH $YEAR | awk 'NF {DAYS = $NF}; END {print DAYS}')
 SINCE="$YEAR-$MONTH-01"
 UNTIL="$YEAR-$MONTH-$LAST_DAY"
 
-prs=$(gh pr list --repo "$REPO" --state all --search "created:>$SINCE closed:<$UNTIL" --json number,title,author --limit 300)
+# Get all PRs and filter out those with "リリース" or "release" in the title
+prs=$(gh pr list --repo "$REPO" --state all --search "created:>$SINCE closed:<$UNTIL" --json number,title,author --limit $LIMIT | jq '[.[] | select(.title | test("リリース|release") | not)]')
 
+# Count PRs per author
 echo "$prs" | jq '[group_by(.author.login)[] | {author: .[0].author.login, count: length}]'
