@@ -40,8 +40,17 @@ if [ -z "$SINCE" ] || [ -z "$UNTIL" ] || [ -z "$REPO" ]; then
     exit 1
 fi
 
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS
+    UNTIL_PLUS_ONE=$(date -j -v+1d -f "%Y-%m-%d" "$UNTIL" "+%Y-%m-%d")
+else
+    # Linux
+    UNTIL_PLUS_ONE=$(date -I -d "$UNTIL + 1 day")
+fi
+
 # Get all PRs, filter out those with "リリース" or "release" in the title
-prs=$(gh pr list --repo "$REPO" --state all --search "created:>$SINCE closed:<$UNTIL" --json number,title,author,url --limit $LIMIT | jq '[.[] | select(.title | test("リリース|release") | not)]')
+# prs=$(gh pr list --repo "$REPO" --state closed --search "closed:>$SINCE closed:<$UNTIL_PLUS_ONE" --json number,title,author,url --limit $LIMIT | jq '[.[] | select(.title | test("リリース|release") | not)]')
+prs=$(gh pr list --repo "$REPO" --state closed --search "closed:$SINCE..$UNTIL_PLUS_ONE" --json number,title,author,url --limit $LIMIT | jq '[.[] | select(.title | test("リリース|release") | not)]')
 
 # Output format depends on verbose flag
 if [ "$VERBOSE" = true ]; then
