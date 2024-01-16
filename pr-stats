@@ -12,6 +12,7 @@ YEAR=""
 MONTH=""
 REPO=""
 LIMIT=500
+VERBOSE=false
 
 for i in "$@"; do
   case $i in
@@ -27,11 +28,15 @@ for i in "$@"; do
       REPO="${i#*=}"
       shift
       ;;
+      -v)
+      VERBOSE=true
+      shift
+      ;;
   esac
 done
 
 if [ -z "$YEAR" ] || [ -z "$MONTH" ] || [ -z "$REPO" ]; then
-    echo "Usage: $0 --year=YYYY --month=MM --repo=orgName/repoName"
+    echo "Usage: $0 --year=YYYY --month=MM --repo=orgName/repoName [-v]"
     exit 1
 fi
 
@@ -39,8 +44,12 @@ LAST_DAY=$(cal $MONTH $YEAR | awk 'NF {DAYS = $NF}; END {print DAYS}')
 SINCE="$YEAR-$MONTH-01"
 UNTIL="$YEAR-$MONTH-$LAST_DAY"
 
-# Get all PRs and filter out those with "リリース" or "release" in the title
-prs=$(gh pr list --repo "$REPO" --state all --search "created:>$SINCE closed:<$UNTIL" --json number,title,author --limit $LIMIT | jq '[.[] | select(.title | test("リリース|release") | not)]')
+# Get all PRs, filter out those with "リリース" or "release" in the title
+prs=$(gh pr list --repo "$REPO" --state all --search "created:>$SINCE closed:<$UNTIL" --json number,title,author,url --limit $LIMIT | jq '[.[] | select(.title | test("リリース|release") | not)]')
 
-# Count PRs per author
-echo "$prs" | jq '[group_by(.author.login)[] | {author: .[0].author.login, count: length}]'
+# Output format depends on verbose flag
+if [ "$VERBOSE" = true ]; then
+    echo "$prs" | jq '[group_by(.author.login)[] | {author: .[0].author.login, count: length, issues: [.[].url]}]'
+else
+    echo "$prs" | jq '[group_by(.author.login)[] | {author: .[0].author.login, count: length}]'
+fi
