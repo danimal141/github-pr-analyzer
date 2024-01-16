@@ -2,7 +2,7 @@
 
 ## How to use
 ```
-$ ./pr-stats --year=2023 --month=11 --repo="{org}/{repo}"
+$ ./pr-stats --since=2023-12-11 --until=2024-12-18 --repo="{org}/{repo}"
 
 [
   {
@@ -20,6 +20,34 @@ $ ./pr-stats --year=2023 --month=11 --repo="{org}/{repo}"
   {
     "author": "xxx",
     "count": 29
+  }
+]
+```
+
+```
+$ ./pr-stats -v --since=2023-12-11 --until=2024-12-18 --repo="{org}/{repo}"
+
+[
+  {
+    "author": "xxx",
+    "count": 31,
+    "prs": [...]
+  },
+  {
+    "author": "xxx",
+    "count": 68,
+    "prs": [...]
+
+  },
+  {
+    "author": "xxx",
+    "count": 39,
+    "prs": [...]
+  },
+  {
+    "author": "xxx",
+    "count": 29,
+    "prs": [...]
   }
 ]
 ```
