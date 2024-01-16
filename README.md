@@ -18,7 +18,7 @@ The GitHub PR Analyzer is a command-line tool designed for aggregating and analy
 ## Usage
 
 ```sh
-./github-pr-analyzer --since=YYYY-MM-DD --until=YYYY-MM-DD --repo=orgName/repoName [-v]
+./gpa --since=YYYY-MM-DD --until=YYYY-MM-DD --repo=orgName/repoName [-v]
 ```
 
 ### Parameters:
@@ -33,11 +33,11 @@ The GitHub PR Analyzer is a command-line tool designed for aggregating and analy
 - To analyze PRs in the `octocat/Spoon-Knife` repository from March 1, 2023, to March 31, 2023:
 
   ```sh
-  ./github-pr-analyzer --since=2023-03-01 --until=2023-03-31 --repo=octocat/Spoon-Knife
+  ./gpa --since=2023-03-01 --until=2023-03-31 --repo=octocat/Spoon-Knife
   ```
 
 - To analyze PRs in the `octocat/Spoon-Knife` repository for the same period with verbose output:
 
   ```sh
-  ./github-pr-analyzer --since=2023-03-01 --until=2023-03-31 --repo=octocat/Spoon-Knife -v
+  ./gpa --since=2023-03-01 --until=2023-03-31 --repo=octocat/Spoon-Knife -v
   ```
