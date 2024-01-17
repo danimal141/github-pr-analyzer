@@ -49,7 +49,6 @@ else
 fi
 
 # Get all PRs, filter out those with "リリース" or "release" in the title
-# prs=$(gh pr list --repo "$REPO" --state closed --search "closed:>$SINCE closed:<$UNTIL_PLUS_ONE" --json number,title,author,url --limit $LIMIT | jq '[.[] | select(.title | test("リリース|release") | not)]')
 prs=$(gh pr list --repo "$REPO" --state closed --search "closed:$SINCE..$UNTIL_PLUS_ONE" --json number,title,author,url --limit $LIMIT | jq '[.[] | select(.title | test("リリース|release") | not)]')
 
 # Output format depends on verbose flag
