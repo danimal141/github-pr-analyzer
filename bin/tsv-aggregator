@@ -1,0 +1,79 @@
+#!/bin/sh
+
+set -eu
+
+# Check for required commands: gh and jq
+if ! gh help > /dev/null || ! jq --version > /dev/null; then
+  echo "gh and jq are required."
+  echo "Please see: https://github.com/cli/cli for gh"
+  echo "and https://stedolan.github.io/jq/ for jq"
+  exit 1
+fi
+
+# Initial parameter setup with default values
+ITER_START=""
+ITER_END=""
+ITER_DURATION=7
+COUNT=""
+REPO=""
+VERBOSE=false
+AUTHORS=""
+
+# Parse command line arguments
+for i in "$@"; do
+  case $i in
+      --iter-start=*)
+      ITER_START="${i#*=}"
+      shift
+      ;;
+      --iter-end=*)
+      ITER_END="${i#*=}"
+      shift
+      ;;
+      --iter-duration=*)
+      ITER_DURATION="${i#*=}"
+      shift
+      ;;
+      --count=*)
+      COUNT="${i#*=}"
+      shift
+      ;;
+      --repo=*)
+      REPO="${i#*=}"
+      shift
+      ;;
+      --output=*)
+      OUTPUT="${i#*=}"
+      shift
+      ;;
+      --authors=*)
+      AUTHORS="${i#*=}"
+      shift
+      ;;
+      -v)
+      VERBOSE=true
+      shift
+      ;;
+  esac
+done
+
+# Check if all required parameters are provided
+if [ -z "$ITER_START" ] || [ -z "$ITER_END" ] || [ -z "$ITER_DURATION" ] || [ -z "$COUNT" ] || [ -z "$REPO" ]; then
+    echo "Usage: $0 --iter-start=YYYY-MM-DD --iter-end=YYYY-MM-DD --iter-duration=days --count=number --repo=orgName/repoName [--authors=author1,author2] [-v]"
+    exit 1
+fi
+
+# Temporary directory for storing individual gpa outputs
+temp_dir=$(mktemp -d)
+temp_file="$temp_dir/out.json"
+trap 'rm -rf "$temp_dir"' EXIT
+
+ROOT_DIR=$(cd $(dirname $0)/..; pwd)
+
+if [ "$VERBOSE" = true ]; then
+  $ROOT_DIR/bin/json-aggregator -v --iter-start="$ITER_START" --iter-end="$ITER_END" --iter-duration="$ITER_DURATION" --count="$COUNT" --repo="$REPO" --authors="$AUTHORS" > $temp_file
+else
+  $ROOT_DIR/bin/json-aggregator --iter-start="$ITER_START" --iter-end="$ITER_END" --iter-duration="$ITER_DURATION" --count="$COUNT" --repo="$REPO" --authors="$AUTHORS" > $temp_file
+fi
+
+python "$ROOT_DIR/misc/json-to-tsv.py" $temp_file
