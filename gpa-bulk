@@ -16,6 +16,8 @@ UNTIL=""
 ITERATION=7 # Set default value for iteration
 COUNT=""
 REPO=""
+VERBOSE=false
+OUTPUT="json"
 
 # Parse command line arguments
 for i in "$@"; do
@@ -40,12 +42,20 @@ for i in "$@"; do
       REPO="${i#*=}"
       shift
       ;;
+      --output=*)
+      OUTPUT="${i#*=}"
+      shift
+      ;;
+      -v)
+      VERBOSE=true
+      shift
+      ;;
   esac
 done
 
 # Check if all required parameters are provided
 if [ -z "$SINCE" ] || [ -z "$UNTIL" ] || [ -z "$ITERATION" ] || [ -z "$COUNT" ] || [ -z "$REPO" ]; then
-    echo "Usage: $0 --since=YYYY-MM-DD --until=YYYY-MM-DD --iteration=days --count=number --repo=orgName/repoName"
+    echo "Usage: $0 --since=YYYY-MM-DD --until=YYYY-MM-DD --iteration=days --count=number --repo=orgName/repoName --output=json|tsv [-v]"
     exit 1
 fi
 
@@ -76,5 +86,9 @@ for (( i=0; i<COUNT; i++ )); do
     echo "Term: since=$new_since, until=$new_until"
 
     # Execute the gpa script with the new dates
-    ./gpa --since="$new_since" --until="$new_until" --repo="$REPO"
+    if [ "$VERBOSE" = true ]; then
+      ./gpa -v --since="$new_since" --until="$new_until" --repo="$REPO" --output="$OUTPUT"
+    else
+      ./gpa --since="$new_since" --until="$new_until" --repo="$REPO" --output="$OUTPUT"
+    fi
 done
