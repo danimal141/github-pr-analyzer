@@ -83,7 +83,7 @@ for (( i=0; i<COUNT; i++ )); do
     new_since=$(date_modify "-${days_to_modify}d" "$SINCE")
     new_until=$(date_modify "-${days_to_modify}d" "$UNTIL")
 
-    echo "Term: since=$new_since, until=$new_until"
+    echo "--- Term: since=$new_since, until=$new_until ---"
 
     # Execute the gpa script with the new dates
     if [ "$VERBOSE" = true ]; then

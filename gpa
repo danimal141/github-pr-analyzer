@@ -14,6 +14,7 @@ REPO=""
 LIMIT=500
 VERBOSE=false
 OUTPUT="json"
+AUTHORS=""
 
 for i in "$@"; do
   case $i in
@@ -33,6 +34,10 @@ for i in "$@"; do
       OUTPUT="${i#*=}"
       shift
       ;;
+      --authors=*)
+      AUTHORS="${i#*=}"
+      shift
+      ;;
       -v)
       VERBOSE=true
       shift
@@ -41,7 +46,7 @@ for i in "$@"; do
 done
 
 if [ -z "$SINCE" ] || [ -z "$UNTIL" ] || [ -z "$REPO" ]; then
-    echo "Usage: $0 --since=YYYY-MM-DD --until=YYYY-MM-DD --repo=orgName/repoName --output=json|tsv [-v]"
+    echo "Usage: $0 --since=YYYY-MM-DD --until=YYYY-MM-DD --repo=orgName/repoName [--output=json|tsv] [--authors=author1,author2] [-v]"
     exit 1
 fi
 
@@ -56,17 +61,25 @@ fi
 # Get all PRs, filter out those with "リリース" or "release" in the title
 prs=$(gh pr list --repo "$REPO" --state closed --search "closed:$SINCE..$UNTIL_PLUS_ONE" --json number,title,author,url --limit $LIMIT | jq '[.[] | select(.title | test("リリース|release") | not)]')
 
+# Authors filtering if specified
+if [ -n "$AUTHORS" ]; then
+    prs=$(echo "$prs" | jq --arg authors "$AUTHORS" '($authors | split(",")) as $author_list | map(select(.author.login | IN($author_list[])))')
+fi
+
+# Output formatting
 if [ "$OUTPUT" = "json" ]; then
     if [ "$VERBOSE" = true ]; then
-        echo "$prs" | jq -r --arg since "$SINCE" --arg until "$UNTIL" '{since: $since, until: $until, data: [group_by(.author.login)[] | {author: .[0].author.login, count: length, prs: [.[].url]}]}'
+        echo "$prs" | jq '[group_by(.author.login)[] | {author: .[0].author.login, count: length, prs: [.[].url]}]'
     else
-        echo "$prs" | jq -r --arg since "$SINCE" --arg until "$UNTIL" '{since: $since, until: $until, data: [group_by(.author.login)[] | {author: .[0].author.login, count: length}]}'
+        echo "$prs" | jq '[group_by(.author.login)[] | {author: .[0].author.login, count: length}]'
+
     fi
 elif [ "$OUTPUT" = "tsv" ]; then
     if [ "$VERBOSE" = true ]; then
-        echo "$prs" | jq -r --arg since "$SINCE" --arg until "$UNTIL" '{since: $since, until: $until, data: [group_by(.author.login)[] | {author: .[0].author.login, count: length, prs: [.[].url]}]} | .data[] | [$since, $until, .author, (.count | tostring), (.prs[] | tostring)] | @tsv'
+        echo "$prs" | jq -r '{data: [group_by(.author.login)[] | {author: .[0].author.login, count: length, prs: [.[].url]}]} | .data[] | [.author, (.count | tostring), (.prs[] | tostring)] | @tsv'
+
     else
-        echo "$prs" | jq -r --arg since "$SINCE" --arg until "$UNTIL" '{since: $since, until: $until, data: [group_by(.author.login)[] | {author: .[0].author.login, count: length}]} | .data[] | [$since, $until, .author, (.count | tostring)] | @tsv'
+        echo "$prs" | jq -r '{data: [group_by(.author.login)[] | {author: .[0].author.login, count: length, prs: [.[].url]}]} | .data[] | [.author, (.count | tostring)] | @tsv'
     fi
 else
     echo "Unsupported output format: $OUTPUT"
