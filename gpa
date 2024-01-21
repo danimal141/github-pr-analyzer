@@ -72,12 +72,10 @@ if [ "$OUTPUT" = "json" ]; then
         echo "$prs" | jq '[group_by(.author.login)[] | {author: .[0].author.login, count: length, prs: [.[].url]}]'
     else
         echo "$prs" | jq '[group_by(.author.login)[] | {author: .[0].author.login, count: length}]'
-
     fi
 elif [ "$OUTPUT" = "tsv" ]; then
     if [ "$VERBOSE" = true ]; then
         echo "$prs" | jq -r '{data: [group_by(.author.login)[] | {author: .[0].author.login, count: length, prs: [.[].url]}]} | .data[] | [.author, (.count | tostring), (.prs[] | tostring)] | @tsv'
-
     else
         echo "$prs" | jq -r '{data: [group_by(.author.login)[] | {author: .[0].author.login, count: length, prs: [.[].url]}]} | .data[] | [.author, (.count | tostring)] | @tsv'
     fi
