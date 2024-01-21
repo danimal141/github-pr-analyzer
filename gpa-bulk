@@ -1,0 +1,80 @@
+#!/bin/sh
+
+set -eu
+
+# Check for required commands: gh and jq
+if ! gh help > /dev/null || ! jq --version > /dev/null; then
+  echo "gh and jq are required."
+  echo "Please see: https://github.com/cli/cli for gh"
+  echo "and https://stedolan.github.io/jq/ for jq"
+  exit 1
+fi
+
+# Initial parameter setup with default values
+SINCE=""
+UNTIL=""
+ITERATION=7 # Set default value for iteration
+COUNT=""
+REPO=""
+
+# Parse command line arguments
+for i in "$@"; do
+  case $i in
+      --since=*)
+      SINCE="${i#*=}"
+      shift
+      ;;
+      --until=*)
+      UNTIL="${i#*=}"
+      shift
+      ;;
+      --iteration=*)
+      ITERATION="${i#*=}"
+      shift
+      ;;
+      --count=*)
+      COUNT="${i#*=}"
+      shift
+      ;;
+      --repo=*)
+      REPO="${i#*=}"
+      shift
+      ;;
+  esac
+done
+
+# Check if all required parameters are provided
+if [ -z "$SINCE" ] || [ -z "$UNTIL" ] || [ -z "$ITERATION" ] || [ -z "$COUNT" ] || [ -z "$REPO" ]; then
+    echo "Usage: $0 --since=YYYY-MM-DD --until=YYYY-MM-DD --iteration=days --count=number --repo=orgName/repoName"
+    exit 1
+fi
+
+# Function to add or subtract days from a date
+# Usage: date_modify "-1d" "2023-01-01"
+date_modify() {
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS
+        modified_date=$(date -v$1 -jf "%Y-%m-%d" "$2" "+%Y-%m-%d")
+        echo $modified_date
+    else
+        # Linux
+        modified_date=$(date -I -d "$2 $1")
+        echo $modified_date
+    fi
+}
+
+
+# Main loop to execute the gpa script with calculated dates
+for (( i=0; i<COUNT; i++ )); do
+    # Calculate the number of days to modify
+    days_to_modify=$(($ITERATION * i))
+
+    # Calculate the new since and until dates
+    new_since=$(date_modify "-${days_to_modify}d" "$SINCE")
+    new_until=$(date_modify "-${days_to_modify}d" "$UNTIL")
+
+    echo "Term: since=$new_since, until=$new_until"
+
+    # Execute the gpa script with the new dates
+    ./gpa --since="$new_since" --until="$new_until" --repo="$REPO"
+done
