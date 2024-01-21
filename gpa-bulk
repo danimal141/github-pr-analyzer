@@ -73,7 +73,6 @@ date_modify() {
     fi
 }
 
-
 # Main loop to execute the gpa script with calculated dates
 for (( i=0; i<COUNT; i++ )); do
     # Calculate the number of days to modify
