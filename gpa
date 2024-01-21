@@ -53,7 +53,7 @@ prs=$(gh pr list --repo "$REPO" --state closed --search "closed:$SINCE..$UNTIL_P
 
 # Output format depends on verbose flag
 if [ "$VERBOSE" = true ]; then
-    echo "$prs" | jq '[group_by(.author.login)[] | {author: .[0].author.login, count: length, prs: [.[].url]}]'
+    echo "$prs" | jq --arg since "$SINCE" --arg until "$UNTIL" '{since: $since, until: $until, data: [group_by(.author.login)[] | {author: .[0].author.login, count: length, prs: [.[].url]}]}'
 else
-    echo "$prs" | jq '[group_by(.author.login)[] | {author: .[0].author.login, count: length}]'
+    echo "$prs" | jq --arg since "$SINCE" --arg until "$UNTIL" '{since: $since, until: $until, data: [group_by(.author.login)[] | {author: .[0].author.login, count: length}]}'
 fi
