@@ -2,7 +2,7 @@ import json
 import sys
 
 # Convert specified json to tsv (to paste spreadsheets directly).
-# > python summary.py out.json
+# > python json-to-tsv.py out.json
 def process_json_data(json_data):
     data = json.loads(json_data)
     author_counts = {}
