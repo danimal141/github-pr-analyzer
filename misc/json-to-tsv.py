@@ -7,6 +7,7 @@ def process_json_data(json_data):
     data = json.loads(json_data)
     author_counts = {}
 
+    # Collect counts for each author across all dates
     for date, authors in data.items():
         for author_data in authors:
             author = author_data['author']
@@ -15,10 +16,14 @@ def process_json_data(json_data):
                 author_counts[author] = {}
             author_counts[author][date] = count
 
+    # Sort authors alphabetically
+    sorted_authors = sorted(author_counts.keys())
+
     dates = sorted(data.keys())
     header = "\t" + "\t".join(dates)
     lines = [header]
-    for author, counts in author_counts.items():
+    for author in sorted_authors:
+        counts = author_counts[author]
         counts_str = [str(counts.get(date, "")) for date in dates]
         line = f"{author}\t" + "\t".join(counts_str)
         lines.append(line)
